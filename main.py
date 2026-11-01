@@ -88,3 +88,42 @@ test_sequences = pad_sequences(test_sequences, maxlen=max_len, padding='post', t
 
 train_Y = (train_Y == 'spam').astype(int)
 test_Y = (test_Y == 'spam').astype(int)
+
+model = tf.keras.models.Sequential([
+    tf.keras.layers.Embedding(input_dim=len(tokenizer.word_index) + 1, output_dim=32, input_length=max_len),
+    tf.keras.layers.LSTM(16),
+    tf.keras.layers.Dense(32, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid')  # Output layer
+])
+
+model.compile(
+    loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
+    optimizer='adam',
+    metrics=['accuracy']
+)
+
+model.summary()
+
+es = EarlyStopping(patience=3, monitor='val_accuracy', restore_best_weights=True)
+lr = ReduceLROnPlateau(patience=2, monitor='val_loss', factor=0.5, verbose=0)
+
+history = model.fit(
+    train_sequences, train_Y,
+    validation_data=(test_sequences, test_Y),
+    epochs=20,
+    batch_size=32,
+    callbacks=[lr, es]
+)
+
+
+test_loss, test_accuracy = model.evaluate(test_sequences, test_Y)
+print('Test Loss :',test_loss)
+print('Test Accuracy :',test_accuracy)
+
+plt.plot(history.history['accuracy'], label='Training Accuracy')
+plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+plt.title('Model Accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend()
+plt.show()
