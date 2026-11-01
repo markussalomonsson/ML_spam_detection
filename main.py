@@ -61,3 +61,30 @@ def remove_stopwords(text):
 
 
 balanced_data['text'] = balanced_data['text'].apply(lambda text: remove_stopwords(text))
+
+def plot_word_cloud(data, typ):
+    email_corpus = " ".join(data['text'])
+    wc = WordCloud(background_color='black', max_words=100, width=800, height=400).generate(email_corpus)
+    plt.figure(figsize=(7, 7))
+    plt.imshow(wc, interpolation='bilinear')
+    plt.title(f'WordCloud for {typ} Emails', fontsize=15)
+    plt.axis('off')
+    plt.show()
+
+
+train_X, test_X, train_Y, test_Y = train_test_split(
+    balanced_data['text'], balanced_data['label'], test_size=0.2, random_state=42
+)
+
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(train_X)
+
+train_sequences = tokenizer.texts_to_sequences(train_X)
+test_sequences = tokenizer.texts_to_sequences(test_X)
+
+max_len = 100  # Maximum sequence length
+train_sequences = pad_sequences(train_sequences, maxlen=max_len, padding='post', truncating='post')
+test_sequences = pad_sequences(test_sequences, maxlen=max_len, padding='post', truncating='post')
+
+train_Y = (train_Y == 'spam').astype(int)
+test_Y = (test_Y == 'spam').astype(int)
